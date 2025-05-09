@@ -27,6 +27,7 @@ yarn-error.log*
 
 # local env files
 .env
+.env.local
 
 # vercel
 .vercel
@@ -34,3 +35,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# remove .history .idea .vscode .next
+.history
+.idea
+.vscode
+.next
+
+# remove .env.local
