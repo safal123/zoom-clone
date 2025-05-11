@@ -1,18 +1,22 @@
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Video } from 'lucide-react'
 
 export const TopNav =
   ({
-     userId
-   }: {
+    userId
+  }: {
     userId?: string | null
   }) => {
     return (
       <header>
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="text-xl font-bold text-violet-100 bg-violet-700 text-violet-50 rounded-md px-2 py-1">ZoomClone</div>
-          <ul className="flex space-x-6">
+          <div className="flex items-center rounded-md px-3 py-2 bg-gradient-to-r from-violet-600 to-blue-500 text-white shadow-md">
+            <Video className="h-5 w-5" />
+            <span className="text-xl font-bold ml-2 hidden sm:inline">MeetSync</span>
+          </div>
+          <ul className="hidden md:flex space-x-6">
             <li>
               <Link href="" className="text-gray-700 hover:text-violet-600 font-bold">
                 Features
@@ -24,14 +28,15 @@ export const TopNav =
               </Link>
             </li>
           </ul>
-          { userId ? <UserButton/> : <div className={ 'flex gap-2' }>
-            <Link href={ '/sign-in' }>
-              <Button size={ 'sm' }>Sign In</Button>
-            </Link>
-            <Link href={ '/sign-up' }>
-              <Button size={ 'sm' } variant={ 'secondary' }>Register</Button>
-            </Link>
-          </div> }
+          {userId ? <UserButton /> :
+            <div className={'flex gap-2'}>
+              <Link href={'/sign-in'}>
+                <Button size={'sm'}>Sign In</Button>
+              </Link>
+              <Link href={'/sign-up'}>
+                <Button size={'sm'} variant={'secondary'}>Register</Button>
+              </Link>
+            </div>}
         </nav>
       </header>
     )

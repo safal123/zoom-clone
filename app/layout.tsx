@@ -27,29 +27,29 @@ const poppins = Poppins({
 });
 
 export default function RootLayout
-({
-   children
- }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  ({
+    children
+  }: Readonly<{
+    children: React.ReactNode;
+  }>) {
   return (
     <html lang="en">
-    <body className={ cn('min-h-screen bg-background', jakarta.className) }>
-    <ConvexClientProvider>
-      <ClerkLoading>
-        <div className="flex items-center justify-center h-screen">
-          <div className="flex flex-col items-center gap-3 animate-pulse">
-            Loading...
-            <LiaSpinnerSolid className="w-12 h-12 animate-spin"/>
-          </div>
-        </div>
-      </ClerkLoading>
-      <ClerkLoaded>
-        { children }
-      </ClerkLoaded>
-      <Toaster />
-    </ConvexClientProvider>
-    </body>
+      <body className={cn('min-h-screen bg-background', jakarta.className)}>
+        <ConvexClientProvider>
+          <ClerkLoading>
+            <div className="flex items-center justify-center h-screen">
+              <div className="flex flex-col items-center gap-3 animate-pulse">
+                Loading...
+                <LiaSpinnerSolid className="w-12 h-12 animate-spin" />
+              </div>
+            </div>
+          </ClerkLoading>
+          <ClerkLoaded>
+            {children}
+          </ClerkLoaded>
+          <Toaster />
+        </ConvexClientProvider>
+      </body>
     </html>
   )
 }

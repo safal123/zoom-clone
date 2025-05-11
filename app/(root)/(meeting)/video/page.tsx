@@ -1,62 +1,60 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Call, useStreamVideoClient } from '@stream-io/video-react-sdk'
-import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Loader } from '@/components/shared/loader'
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 const VideoPage = () => {
-  const user = useUser()
+  const { user, isLoaded } = useUser()
   const client = useStreamVideoClient()
-  const [values, setValues] = useState({
-    dateTime: new Date(),
-    description: '',
-    link: '',
-  })
   const [callDetails, setCallDetails] = useState<Call>()
   const router = useRouter()
 
-  const createMeeting = async () => {
-    if (!client || !user) return
+  const getOrCreateRoom = useMutation(api.privateRooms.getOrCreate)
+  const updateRoomStatus = useMutation(api.privateRooms.updateStatus)
+
+  const joinOrCreateRoom = useCallback(async () => {
+    if (!client || !user || !isLoaded) return
 
     try {
-      const id = crypto.randomUUID()
-      const meeting = await client.call('default', id)
+      // Get or create private room
+      const room = await getOrCreateRoom({
+        ownerId: user.id,
+        ownerName: user.fullName || user.username || 'Anonymous',
+        ownerImage: user.imageUrl,
+      })
 
-      if (!meeting) {
-        throw new Error('Meeting creation failed')
-      }
+      if (!room) throw new Error('Failed to create room')
 
-      const startsAt = values.dateTime.toISOString() || new Date(Date.now()).toISOString()
-      const description = values.description || ''
+      // Join Stream call
+      const meeting = await client.call('default', room.streamId)
+      await meeting.getOrCreate()
 
-      await meeting.getOrCreate({
-        data: {
-          starts_at: startsAt,
-          custom: {
-            description,
-          }
-        }
+      // Update room status
+      await updateRoomStatus({
+        streamId: room.streamId,
+        isActive: true
       })
 
       setCallDetails(meeting)
-      toast('Meeting created successfully')
-      await router.push(`/video/${id}`)
+      await router.push(`/video/${room.streamId}`)
     } catch (error) {
       console.error(error)
-      toast.error('Failed to create meeting')
+      toast.error('Failed to join room')
     }
-  }
+  }, [client, user, isLoaded, getOrCreateRoom, updateRoomStatus, router])
 
-  useEffect (() => {
+  useEffect(() => {
     if (!client) return
     if (!user) return
-    createMeeting ()
-  }, [])
-
+    if (!isLoaded) return
+    joinOrCreateRoom()
+  }, [client, user, isLoaded, joinOrCreateRoom])
 
   return (
     <Loader />

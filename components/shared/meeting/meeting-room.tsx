@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   CallControls,
   CallParticipantsList,
@@ -47,6 +47,8 @@ const MeetingRoom = () => {
   const [layout, setLayout] = React.useState<CallLayout>('speaker-left')
   const [showParticipantsBar, setShowParticipantsBar] = React.useState(true)
   const call = useCall()
+
+  console.log("Calling state", call?.state.callingState)
 
   return (
     <section className="relative h-screen w-full">

@@ -3,7 +3,7 @@ import PricingCard from '@/components/shared/price-card'
 
 const PricingPage = () => {
   return (
-    <div id={'pricing'} className="bg-gray-100 py-12 px-6 bg-dots-pattern">
+    <div id={'pricing'} className="bg-gray-100 py-12 bg-dots-pattern">
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Choose Your Plan</h1>
         <p className="text-lg text-gray-600">

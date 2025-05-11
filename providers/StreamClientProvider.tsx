@@ -12,11 +12,11 @@ import { Loader } from '@/components/shared/loader'
 
 const apiKey = process.env.NEXT_PUBLIC_STREAM_API_KEY;
 
-const StreamVideoProvider = ({ children }: { children: React.ReactNode}) => {
-  const [videoClient, setVideoClient] = useState <StreamVideoClient | null>(null);
-  const {user, isLoaded} = useUser()
+const StreamVideoProvider = ({ children }: { children: React.ReactNode }) => {
+  const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
+  const { user, isLoaded } = useUser()
 
-  useEffect (() => {
+  useEffect(() => {
     if (!isLoaded || !user) return;
     if (!apiKey) {
       console.error('Stream API key not found');
