@@ -7,7 +7,7 @@ const PricingPage = () => {
       <header className="text-center mb-12">
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Choose Your Plan</h1>
         <p className="text-lg text-gray-600">
-          Find the plan that's right for you and your team.
+          Find the plan that&apos;s right for you and your team.
         </p>
       </header>
 
