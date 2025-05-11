@@ -1,6 +1,7 @@
 import { VideoIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link'
+import { NewMeetingButton } from '../new-meeting-button';
 
 export const HeroSection = () => {
   return (
@@ -14,12 +15,7 @@ export const HeroSection = () => {
             Experience high-quality video calls, screen sharing, and collaborative tools that make remote work feel effortless.
           </p>
           <div className="flex justify-center">
-            <Link href={'/video'}>
-              <Button className="shadow-lg flex items-center bg-violet-600 text-white px-6 py-3 rounded-md text-lg hover:bg-violet-700 transition duration-300">
-                Create Instant Meeting
-                <VideoIcon className="h-6 w-6 ml-2" />
-              </Button>
-            </Link>
+            <NewMeetingButton size='lg' />
           </div>
         </div>
       </div>

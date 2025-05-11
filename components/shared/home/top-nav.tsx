@@ -12,10 +12,12 @@ export const TopNav =
     return (
       <header>
         <nav className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center rounded-md px-3 py-2 bg-gradient-to-r from-violet-600 to-blue-500 text-white shadow-md">
-            <Video className="h-5 w-5" />
-            <span className="text-xl font-bold ml-2 hidden sm:inline">MeetSync</span>
-          </div>
+          <Link href="/" className="flex items-center">
+            <div className="flex items-center rounded-md px-3 py-2 bg-gradient-to-r from-violet-600 to-blue-500 text-white shadow-md">
+              <Video className="h-5 w-5" />
+              <span className="text-xl font-bold ml-2 hidden sm:inline">MeetSync</span>
+            </div>
+          </Link>
           <ul className="hidden md:flex space-x-6">
             <li>
               <Link href="" className="text-gray-700 hover:text-violet-600 font-bold">

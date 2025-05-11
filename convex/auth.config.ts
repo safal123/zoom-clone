@@ -1,8 +1,10 @@
-export default {
+const authConfig = {
   providers: [
     {
-      domain: "https://safe-tadpole-57.clerk.accounts.dev/",
+      domain: process.env.NEXT_PUBLIC_CLERK_AUTH_DOMAIN,
       applicationID: "convex",
     },
   ]
 };
+
+export default authConfig;
