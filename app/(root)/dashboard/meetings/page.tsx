@@ -97,37 +97,23 @@ const MeetingsPage = () => {
                 <span className="hidden sm:inline">Copy Link</span>
                 <span className="sm:hidden">Link</span>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2"
-                onClick={() => setEditingMeetingId(meeting._id)}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
+              <ScheduleMeetingModel
+                mode='edit'
+                meetingId={meeting._id}
+                defaultValues={{
+                  title: meeting.title,
+                  description: meeting.description,
+                  duration: meeting.duration,
+                  isRecurring: meeting.isRecurring,
+                  requireRegistration: meeting.requireRegistration,
+                  maxParticipants: meeting.maxParticipants,
+                  streamId: meeting.streamId,
+                  startsAt: meeting.startsAt,
+                }} />
             </div>
           </div>
         ))}
       </Card>
-
-      {/* Edit Modal - Only render when a meeting is being edited */}
-      {editingMeetingId && meetings && (
-        <ScheduleMeetingModel
-          mode='edit'
-          meetingId={editingMeetingId}
-          defaultValues={{
-            title: meetings.find(m => m._id === editingMeetingId)?.title || '',
-            description: meetings.find(m => m._id === editingMeetingId)?.description || '',
-            duration: meetings.find(m => m._id === editingMeetingId)?.duration || 30,
-            isRecurring: meetings.find(m => m._id === editingMeetingId)?.isRecurring || false,
-            requireRegistration: meetings.find(m => m._id === editingMeetingId)?.requireRegistration || false,
-            maxParticipants: meetings.find(m => m._id === editingMeetingId)?.maxParticipants,
-            streamId: meetings.find(m => m._id === editingMeetingId)?.streamId || '',
-            startsAt: meetings.find(m => m._id === editingMeetingId)?.startsAt || '',
-          }}
-          onSuccess={() => setEditingMeetingId(null)}
-        />
-      )}
 
       {/* Empty State */}
       {meetings?.length === 0 && (

@@ -93,11 +93,6 @@ const ScheduleMeetingModel = forwardRef<
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  useImperativeHandle(ref, () => ({
-    open: () => setOpen(true),
-    close: () => setOpen(false)
-  }));
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: defaultValues || {
@@ -111,14 +106,7 @@ const ScheduleMeetingModel = forwardRef<
   });
 
   useEffect(() => {
-    if (mode === 'edit' && meetingId) {
-      setOpen(true);
-    }
-  }, [mode, meetingId]);
-
-  useEffect(() => {
     if (mode === 'edit' && defaultValues) {
-      // If we have a startsAt string in ISO format, convert it to separate date and time fields
       if (defaultValues.startsAt && typeof defaultValues.startsAt === 'string') {
         try {
           const date = new Date(defaultValues.startsAt);
@@ -203,7 +191,6 @@ const ScheduleMeetingModel = forwardRef<
 
     try {
       setIsDeleting(true);
-      // Properly convert string ID to Convex ID
       await deleteMeeting({
         id: meetingId as unknown as Id<"meetings">
       });
@@ -221,11 +208,9 @@ const ScheduleMeetingModel = forwardRef<
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button variant={mode === 'create' ? "outline" : "ghost"}>
-            {mode === 'create' ? 'Schedule Meeting' : 'Edit'}
-          </Button>
-        )}
+        <Button variant={mode === 'create' ? "outline" : "ghost"}>
+          {mode === 'create' ? 'Schedule Meeting' : 'Edit'}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
