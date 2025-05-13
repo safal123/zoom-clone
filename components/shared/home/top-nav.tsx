@@ -30,7 +30,12 @@ export const TopNav =
               </Link>
             </li>
           </ul>
-          {userId ? <UserButton /> :
+          {userId ? <div className={'flex gap-2'}>
+            <Link href="/dashboard">
+              <Button size={'sm'}>Dashboard</Button>
+            </Link>
+            <UserButton />
+          </div> :
             <div className={'flex gap-2'}>
               <Link href={'/sign-in'}>
                 <Button size={'sm'}>Sign In</Button>

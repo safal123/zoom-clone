@@ -54,12 +54,17 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Welcome back!</h2>
-          <p className="mt-1 text-gray-500">Here&apos;s what&apos;s happening with your meetings.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="space-y-1">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back!</h2>
+          <p className="text-base text-gray-500">Here&apos;s what&apos;s happening with your meetings.</p>
         </div>
-        <NewMeetingButton size='sm' />
+        <div className="flex justify-start sm:justify-end">
+          <NewMeetingButton
+            size="sm"
+            className="w-full sm:w-auto min-w-[140px]"
+          />
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -97,29 +102,33 @@ const DashboardPage = () => {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Recent Activity</h3>
-          <Button variant="ghost" className="flex items-center gap-2 text-blue-600 hover:text-blue-700" onClick={() => router.push('/dashboard/history')}>
-            View all
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700"
+            onClick={() => router.push('/dashboard/history')}
+          >
+            <span className="hidden sm:inline">View all</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
         <Card className="divide-y divide-gray-200 overflow-hidden">
           {[1, 2, 3].map((_, i) => (
-            <div key={i} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
-              <div className="space-y-1">
+            <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 hover:bg-gray-50 transition-colors space-y-3 sm:space-y-0">
+              <div className="space-y-2 sm:space-y-1">
                 <p className="font-medium text-gray-900">Team Sync Meeting</p>
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <Users className="h-4 w-4" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex items-center gap-1 text-sm text-gray-500 min-w-[120px]">
+                    <Users className="h-4 w-4 flex-shrink-0" />
                     12 participants
                   </span>
-                  <span className="text-gray-300">•</span>
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <Clock className="h-4 w-4" />
+                  <span className="hidden sm:inline text-gray-300">•</span>
+                  <span className="flex items-center gap-1 text-sm text-gray-500 min-w-[100px]">
+                    <Clock className="h-4 w-4 flex-shrink-0" />
                     45 minutes
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2">
                 <span className="text-sm text-gray-500">2 hours ago</span>
                 <ArrowRight className="h-4 w-4 text-gray-400" />
               </div>

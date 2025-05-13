@@ -10,12 +10,14 @@ interface NewMeetingButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg';
   className?: string;
+  text?: string;
 }
 
 export const NewMeetingButton = ({
   variant = 'default',
   size = 'default',
-  className
+  className,
+  text = 'New Meeting'
 }: NewMeetingButtonProps) => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +68,7 @@ export const NewMeetingButton = ({
           />
         </svg>
       )}
-      {isLoading ? "Creating..." : "New Meeting"}
+      {isLoading ? "Processing..." : text}
       {!isLoading && <Video className="h-4 w-4" />}
     </Button>
   );

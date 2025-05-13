@@ -5,7 +5,8 @@ export default defineSchema({
   users: defineTable({
     clerkUser: v.any(),
     color: v.string(),
-  }).index("by_clerk_id", ["clerkUser.id"]),
+  })
+    .index("by_clerk_id", ["clerkUser.id"]),
 
   privateRooms: defineTable({
     streamId: v.string(),
@@ -53,13 +54,19 @@ export default defineSchema({
   meetings: defineTable({
     streamId: v.string(),
     title: v.string(),
-    description: v.string(),
-    startsAt: v.string(),
+    duration: v.optional(v.number()),
+    description: v.optional(v.string()),
+    startsAt: v.optional(v.string()),
+    isRecurring: v.optional(v.boolean()),
+    requireRegistration: v.optional(v.boolean()),
+    maxParticipants: v.optional(v.number()),
     hostId: v.string(),
     hostName: v.string(),
     hostImage: v.optional(v.string()),
     createdAt: v.string(),
     status: v.string(),
+    meetingUrl: v.optional(v.string()),
+    type: v.optional(v.string()), // 'scheduled', 'live', 'past'
     participants: v.array(
       v.object({
         id: v.string(),
@@ -69,4 +76,8 @@ export default defineSchema({
       })
     ),
   })
+    .index("by_host", ["hostId"])
+    .index("by_stream_id", ["streamId"])
+    .index("by_type", ["type"])
+    .index("by_time", ["startsAt"])
 });

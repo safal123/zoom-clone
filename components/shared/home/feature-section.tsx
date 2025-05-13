@@ -36,7 +36,7 @@ export const FeatureSection = () => {
   ];
 
   return (
-    <section className="py-20 bg-gray-50 bg-dots-pattern">
+    <section className="md:py-20 bg-gray-50 bg-dots-pattern">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-800 mb-4">Powerful Features</h2>
