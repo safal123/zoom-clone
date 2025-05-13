@@ -10,7 +10,6 @@ export const create = mutation({
     isRecurring: v.boolean(),
     requireRegistration: v.boolean(),
     maxParticipants: v.optional(v.number()),
-    // Required fields for Convex
     hostId: v.string(),
     hostName: v.string(),
     hostImage: v.optional(v.string()),
@@ -31,7 +30,7 @@ export const create = mutation({
       hostName: args.hostName,
       hostImage: args.hostImage,
       createdAt: new Date().toISOString(),
-      status: "scheduled", // scheduled, active, ended
+      status: "scheduled",
       participants: [{
         id: args.hostId,
         name: args.hostName,
@@ -44,7 +43,6 @@ export const create = mutation({
   },
 });
 
-// Get all meetings
 export const getAll = query({
   args: {},
   handler: async (ctx) => {
@@ -53,19 +51,16 @@ export const getAll = query({
       throw new Error("Unauthorized");
     }
     console.log(auth);
-    // get all meetings where hostId is the current user's id
     return await
       ctx
         .db
         .query("meetings")
         .filter((q) => q.eq(q.field("hostId"), auth.subject))
-        // order by creation time
         .order("desc")
         .collect();
   },
 });
 
-// Update a meeting
 export const update = mutation({
   args: {
     id: v.id("meetings"),
@@ -91,7 +86,6 @@ export const update = mutation({
   },
 });
 
-// Delete a meeting
 export const deleteMeeting = mutation({
   args: {
     id: v.id("meetings")
@@ -101,6 +95,192 @@ export const deleteMeeting = mutation({
     if (!auth) {
       throw new Error("Unauthorized");
     }
+
+    const meeting = await ctx.db.get(args.id);
+    if (!meeting) {
+      throw new Error("Meeting not found");
+    }
+
+    if (meeting.hostId !== auth.subject) {
+      throw new Error("Only the host can delete the meeting");
+    }
+
     await ctx.db.delete(args.id);
+    return { success: true };
+  },
+});
+
+export const addParticipant = mutation({
+  args: {
+    meetingId: v.id("meetings"),
+    participant: v.object({
+      email: v.string(),
+      name: v.string(),
+      role: v.union(v.literal("viewer"), v.literal("presenter"), v.literal("co-host")),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const auth = await ctx.auth.getUserIdentity();
+    if (!auth) {
+      throw new Error("Unauthorized");
+    }
+
+    const meeting = await ctx.db.get(args.meetingId);
+    if (!meeting) {
+      throw new Error("Meeting not found");
+    }
+
+    if (meeting.hostId !== auth.subject) {
+      const isCoHost = meeting.participants.some(
+        p => p.id === auth.subject && p.role === "co-host"
+      );
+
+      if (!isCoHost) {
+        throw new Error("Only hosts and co-hosts can add participants");
+      }
+    }
+
+    const existingParticipant = meeting.participants.find(
+      p => p.id === args.participant.email || p.name === args.participant.name
+    );
+
+    if (existingParticipant) {
+      throw new Error("Participant already exists in this meeting");
+    }
+
+    const updatedParticipants = [
+      ...meeting.participants,
+      {
+        id: args.participant.email,
+        name: args.participant.name,
+        image: undefined,
+        role: args.participant.role
+      }
+    ];
+
+    await ctx.db.patch(args.meetingId, {
+      participants: updatedParticipants
+    });
+
+    return { success: true };
+  },
+});
+
+export const getById = query({
+  args: {
+    id: v.id("meetings")
+  },
+  handler: async (ctx, args) => {
+    const auth = await ctx.auth.getUserIdentity();
+    if (!auth) {
+      throw new Error("Unauthorized");
+    }
+
+    const meeting = await ctx.db.get(args.id);
+    if (!meeting) {
+      throw new Error("Meeting not found");
+    }
+
+    const isUserInMeeting = meeting.participants.some(p => p.id === auth.subject);
+    if (!isUserInMeeting && meeting.hostId !== auth.subject) {
+      throw new Error("You don't have access to this meeting");
+    }
+
+    return meeting;
+  },
+});
+
+export const removeParticipant = mutation({
+  args: {
+    meetingId: v.id("meetings"),
+    participantId: v.string()
+  },
+  handler: async (ctx, args) => {
+    const auth = await ctx.auth.getUserIdentity();
+    if (!auth) {
+      throw new Error("Unauthorized");
+    }
+
+    const meeting = await ctx.db.get(args.meetingId);
+    if (!meeting) {
+      throw new Error("Meeting not found");
+    }
+
+    if (meeting.hostId !== auth.subject) {
+      const isCoHost = meeting.participants.some(
+        p => p.id === auth.subject && p.role === "co-host"
+      );
+
+      if (!isCoHost) {
+        throw new Error("Only hosts and co-hosts can remove participants");
+      }
+    }
+
+    const participantToRemove = meeting.participants.find(p => p.id === args.participantId);
+    if (!participantToRemove) {
+      throw new Error("Participant not found");
+    }
+
+    if (participantToRemove.role === "host") {
+      throw new Error("Cannot remove the host");
+    }
+
+    const updatedParticipants = meeting.participants.filter(
+      p => p.id !== args.participantId
+    );
+
+    await ctx.db.patch(args.meetingId, {
+      participants: updatedParticipants
+    });
+
+    return { success: true };
+  },
+});
+
+export const updateParticipantRole = mutation({
+  args: {
+    meetingId: v.id("meetings"),
+    participantId: v.string(),
+    role: v.union(
+      v.literal("viewer"),
+      v.literal("presenter"),
+      v.literal("co-host")
+    )
+  },
+  handler: async (ctx, args) => {
+    const auth = await ctx.auth.getUserIdentity();
+    if (!auth) {
+      throw new Error("Unauthorized");
+    }
+
+    const meeting = await ctx.db.get(args.meetingId);
+    if (!meeting) {
+      throw new Error("Meeting not found");
+    }
+
+    if (meeting.hostId !== auth.subject) {
+      throw new Error("Only hosts can update participant roles");
+    }
+
+    const participantIndex = meeting.participants.findIndex(
+      p => p.id === args.participantId
+    );
+
+    if (participantIndex === -1) {
+      throw new Error("Participant not found");
+    }
+
+    const updatedParticipants = [...meeting.participants];
+
+    updatedParticipants[participantIndex] = {
+      ...updatedParticipants[participantIndex],
+      role: args.role
+    };
+
+    await ctx.db.patch(args.meetingId, {
+      participants: updatedParticipants
+    });
+
+    return { success: true };
   },
 });

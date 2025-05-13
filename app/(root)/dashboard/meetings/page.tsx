@@ -3,19 +3,24 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
-import { Video, Calendar, Copy, Pencil, Users, Clock } from 'lucide-react';
+import { Video, Calendar, Copy, Pencil, Users, Clock, UserPlus, Trash } from 'lucide-react';
 import { NewMeetingButton } from '@/components/shared/new-meeting-button';
 import { cn } from '@/lib/utils';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { LiaSpinnerSolid } from 'react-icons/lia';
 import ScheduleMeetingModel, { ScheduleMeetingModelRef } from '@/components/shared/dashboard/meeting/schedule-meeting-model';
 import { useRef, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import AddMemberModel from '@/components/shared/dashboard/meeting/add-member-model';
+import ViewMembersModal from "@/components/shared/dashboard/meeting/view-members-modal";
+import { toast } from 'sonner';
+import { Id } from '@/convex/_generated/dataModel';
+import { format } from 'date-fns';
 
 const MeetingsPage = () => {
   const router = useRouter();
   const meetings = useQuery(api.meetings.getAll);
-  // Track which meeting is being edited
   const [editingMeetingId, setEditingMeetingId] = useState<string | null>(null);
 
   const getStatusStyle = (status: string) => {
@@ -36,6 +41,16 @@ const MeetingsPage = () => {
     );
   }
 
+  const getInitials = (name: string) => {
+    if (!name) return '??';
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -52,7 +67,6 @@ const MeetingsPage = () => {
         </div>
       </div>
 
-      {/* Meetings List */}
       <Card className="divide-y divide-gray-200 overflow-hidden">
         {meetings?.map((meeting) => (
           <div
@@ -68,35 +82,67 @@ const MeetingsPage = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="font-medium text-gray-900 truncate">{meeting.title}</h3>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <Calendar className="h-4 w-4 flex-shrink-0" />
-                    {meeting._creationTime}
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs sm:text-sm">
+                  <span className="flex items-center gap-1 text-blue-600 font-medium">
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    Created: {format(new Date(meeting._creationTime), 'MMM d, yyyy')}
                   </span>
+                  {meeting.startsAt && (
+                    <>
+                      <span className="hidden sm:inline text-gray-300">•</span>
+                      <span className="flex items-center gap-1 text-purple-600 font-medium">
+                        <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                        Starts: {format(new Date(meeting.startsAt), 'MMM d, yyyy h:mm a')}
+                      </span>
+                    </>
+                  )}
                   <span className="hidden sm:inline text-gray-300">•</span>
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <Users className="h-4 w-4 flex-shrink-0" />
+                  <span className="flex items-center gap-1 text-green-600 font-medium">
+                    <Users className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     {meeting.participants.length} participants
                   </span>
                   <span className="hidden sm:inline text-gray-300">•</span>
-                  <span className="flex items-center gap-1 text-sm text-gray-500">
-                    <Clock className="h-4 w-4 flex-shrink-0" />
+                  <span className="flex items-center gap-1 text-gray-500">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                     {meeting.duration}
                   </span>
                 </div>
+
+                {meeting.participants.length > 0 && (
+                  <div className="mt-3 flex -space-x-2 overflow-hidden">
+                    {meeting.participants.slice(0, 3).map((participant, i) => (
+                      <Avatar key={i} className="inline-block h-6 w-6 rounded-full ring-2 ring-white">
+                        <AvatarImage src={participant.image || ''} alt={participant.name} />
+                        <AvatarFallback>{getInitials(participant.name)}</AvatarFallback>
+                      </Avatar>
+                    ))}
+                    {meeting.participants.length > 3 && (
+                      <div className="flex items-center justify-center h-6 w-6 rounded-full bg-gray-200 text-xs font-medium text-gray-700 ring-2 ring-white">
+                        +{meeting.participants.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex flex-row sm:flex-row items-center gap-2 ml-16 sm:ml-0">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none justify-center"
-                onClick={() => { }}
+                className="flex-1 sm:flex-none justify-center text-xs sm:text-sm hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(meeting.meetingUrl ?? '');
+                  toast.success('Link copied to clipboard');
+                }}
               >
-                <Copy className="mr-2 h-4 w-4" />
+                <Copy className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Copy Link</span>
                 <span className="sm:hidden">Link</span>
               </Button>
+              <ViewMembersModal meetingId={meeting._id} />
+              <AddMemberModel
+                meetingId={meeting._id}
+              />
               <ScheduleMeetingModel
                 mode='edit'
                 meetingId={meeting._id}
@@ -115,7 +161,6 @@ const MeetingsPage = () => {
         ))}
       </Card>
 
-      {/* Empty State */}
       {meetings?.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-8 sm:p-12">
           <Video className="h-12 w-12 text-gray-400" />
