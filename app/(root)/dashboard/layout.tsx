@@ -33,11 +33,6 @@ const navItems: NavItem[] = [
     icon: <Video className="h-5 w-5" />
   },
   {
-    label: 'History',
-    href: '/dashboard/history',
-    icon: <History className="h-5 w-5" />
-  },
-  {
     label: 'Team',
     href: '/dashboard/team',
     icon: <Users className="h-5 w-5" />
@@ -121,7 +116,6 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
               >
                 <Menu className="h-5 w-5" />
               </button>
-              <h1 className="text-xl font-semibold text-gray-800">Dashboard</h1>
             </div>
             <div className="flex items-center gap-4">
               <UserButton afterSignOutUrl="/" />
