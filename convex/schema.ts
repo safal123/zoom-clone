@@ -13,71 +13,152 @@ export default defineSchema({
     ownerId: v.string(),
     ownerName: v.string(),
     ownerImage: v.optional(v.string()),
-    createdAt: v.string(),
+    createdAt: v.number(),
     isActive: v.boolean(),
-    lastAccessedAt: v.optional(v.string()),
+    lastAccessedAt: v.optional(v.number()),
     title: v.string(),
-  }).index("by_owner", ["ownerId"]),
+  }).index("by_owner_id", ["ownerId"]),
 
   userActivities: defineTable({
     userId: v.string(),
     userName: v.string(),
     userImage: v.optional(v.string()),
-    activityType: v.string(), // 'video_call', 'document_edit', 'chat', 'file_share', etc.
-    resourceId: v.string(), // streamId, documentId, chatId, etc.
-    startTime: v.string(),
-    endTime: v.optional(v.string()),
+    activityType: v.union(
+      v.literal("video_call"),
+      v.literal("document_edit"),
+      v.literal("chat"),
+      v.literal("file_share")
+    ),
+    resourceId: v.string(),
+    startTime: v.number(),
+    endTime: v.optional(v.number()),
     events: v.array(v.object({
       type: v.string(),
-      timestamp: v.string(),
-      details: v.optional(v.any()), // Flexible field for any event-specific data
-      metadata: v.optional(v.any()), // Additional context
+      timestamp: v.number(),
+      details: v.optional(v.object({})),
+      metadata: v.optional(v.object({})),
     })),
     summary: v.object({
-      duration: v.optional(v.number()), // in seconds
-      metrics: v.optional(v.any()), // Flexible metrics storage as plain object
+      duration: v.optional(v.number()),
+      metrics: v.optional(v.object({})),
       interactions: v.optional(v.number()),
-      status: v.optional(v.string()), // 'completed', 'interrupted', 'ongoing'
+      status: v.optional(v.union(
+        v.literal("completed"),
+        v.literal("interrupted"),
+        v.literal("ongoing")
+      )),
     }),
     context: v.optional(v.object({
       location: v.optional(v.string()),
       device: v.optional(v.string()),
       platform: v.optional(v.string()),
-      additionalData: v.optional(v.any()),
+      additionalData: v.optional(v.object({})),
     })),
   })
-    .index("by_user", ["userId"])
-    .index("by_resource", ["resourceId"])
-    .index("by_type", ["activityType"])
-    .index("by_time", ["startTime"]),
+    .index("by_user_id", ["userId"])
+    .index("by_resource_id", ["resourceId"])
+    .index("by_activity_type", ["activityType"])
+    .index("by_start_time", ["startTime"]),
 
   meetings: defineTable({
     streamId: v.string(),
     title: v.string(),
-    duration: v.optional(v.number()),
     description: v.optional(v.string()),
-    startsAt: v.optional(v.string()),
-    isRecurring: v.optional(v.boolean()),
-    requireRegistration: v.optional(v.boolean()),
-    maxParticipants: v.optional(v.number()),
+    duration: v.optional(v.number()),
+
+    startsAt: v.number(),
+    endsAt: v.optional(v.number()),
+    createdAt: v.number(),
+
+    type: v.union(
+      v.literal("scheduled"),
+      v.literal("instant"),
+      v.literal("recurring")
+    ),
+    status: v.union(
+      v.literal("scheduled"),
+      v.literal("inProgress"),
+      v.literal("completed"),
+      v.literal("cancelled")
+    ),
+
     hostId: v.string(),
     hostName: v.string(),
     hostImage: v.optional(v.string()),
-    createdAt: v.string(),
-    status: v.string(),
+
+    isRecurring: v.boolean(),
+    requireRegistration: v.boolean(),
+    maxParticipants: v.optional(v.number()),
     meetingUrl: v.optional(v.string()),
-    type: v.optional(v.string()), // 'scheduled', 'live', 'past'
+
+    recurringPattern: v.optional(v.union(
+      v.literal("daily"),
+      v.literal("weekly"),
+      v.literal("biweekly"),
+      v.literal("monthly")
+    )),
+    recurringDaysOfWeek: v.optional(v.array(v.number())),
+    recurringInterval: v.optional(v.number()),
+    recurringEndDate: v.optional(v.number()),
+    recurringCount: v.optional(v.number()),
+
     participants: v.array(
       v.object({
         id: v.string(),
         name: v.string(),
+        email: v.optional(v.string()),
         image: v.optional(v.string()),
-        role: v.string()
+        role: v.union(
+          v.literal("host"),
+          v.literal("co-host"),
+          v.literal("participant"),
+          v.literal("observer")
+        ),
+        joinedAt: v.optional(v.number()),
+        leftAt: v.optional(v.number()),
+        isActive: v.boolean(),
+        totalTimePresent: v.optional(v.number()),
+        registrationStatus: v.optional(v.union(
+          v.literal("registered"),
+          v.literal("attended"),
+          v.literal("no-show"),
+          v.literal("cancelled")
+        )),
+        feedback: v.optional(v.object({
+          rating: v.optional(v.number()),
+          comments: v.optional(v.string()),
+        })),
       })
     ),
+
+    settings: v.object({
+      allowRecording: v.boolean(),
+      allowChat: v.boolean(),
+      allowScreenShare: v.boolean(),
+      muteOnEntry: v.boolean(),
+      waitingRoom: v.boolean(),
+      password: v.optional(v.string()),
+    }),
+
+    recordings: v.optional(v.array(
+      v.object({
+        id: v.string(),
+        url: v.string(),
+        duration: v.number(),
+        createdAt: v.number(),
+        fileSize: v.optional(v.number()),
+      })
+    )),
+
+    analytics: v.optional(v.object({
+      totalDuration: v.optional(v.number()),
+      peakParticipantCount: v.optional(v.number()),
+      averageParticipantCount: v.optional(v.number()),
+    })),
   })
-    .index("by_host", ["hostId"])
+    .index("by_host_id", ["hostId"])
     .index("by_stream_id", ["streamId"])
-    .index("by_type", ["type"])
-    .index("by_time", ["startsAt"])
+    .index("by_status_and_starts_at", ["status", "startsAt"])
+    .index("by_type_and_starts_at", ["type", "startsAt"])
+    .index("by_starts_at", ["startsAt"]),
 });

@@ -40,7 +40,7 @@ import { Id } from '@/convex/_generated/dataModel';
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  role: z.enum(['viewer', 'presenter', 'co-host']),
+  role: z.enum(['co-host', 'participant', 'observer']),
 });
 
 export type AddMemberModelRef = {
@@ -68,7 +68,7 @@ const AddMemberModel = forwardRef<AddMemberModelRef, AddMemberModelProps>(
       defaultValues: {
         email: '',
         name: '',
-        role: 'viewer',
+        role: 'observer',
       },
     });
 
@@ -113,7 +113,7 @@ const AddMemberModel = forwardRef<AddMemberModelRef, AddMemberModelProps>(
             </Button>
           )}
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Participant</DialogTitle>
             <DialogDescription>
@@ -163,8 +163,8 @@ const AddMemberModel = forwardRef<AddMemberModelRef, AddMemberModelProps>(
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                        <SelectItem value="presenter">Presenter</SelectItem>
+                        <SelectItem value="observer">Observer</SelectItem>
+                        <SelectItem value="participant">Participant</SelectItem>
                         <SelectItem value="co-host">Co-host</SelectItem>
                       </SelectContent>
                     </Select>

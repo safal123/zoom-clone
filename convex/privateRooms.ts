@@ -12,13 +12,13 @@ export const getOrCreate = mutation({
     // Check if user already has a private room
     const existingRoom = await ctx.db
       .query("privateRooms")
-      .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
+      .withIndex("by_owner_id", (q) => q.eq("ownerId", args.ownerId))
       .first();
 
     if (existingRoom) {
       // Update last accessed time
       await ctx.db.patch(existingRoom._id, {
-        lastAccessedAt: new Date().toISOString(),
+        lastAccessedAt: Date.now(),
         ownerName: args.ownerName, // Update name in case it changed
         ownerImage: args.ownerImage, // Update image in case it changed
       });
@@ -26,14 +26,14 @@ export const getOrCreate = mutation({
     }
 
     // Create new private room
-    const streamId = crypto.randomUUID();
+    const streamId = `${args.ownerId.replace('user_', '')}-${Date.now()}`;
     const roomId = await ctx.db.insert("privateRooms", {
       streamId,
       ownerId: args.ownerId,
       ownerName: args.ownerName,
       ownerImage: args.ownerImage,
-      createdAt: new Date().toISOString(),
-      lastAccessedAt: new Date().toISOString(),
+      createdAt: Date.now(),
+      lastAccessedAt: Date.now(),
       isActive: false,
       title: `${args.ownerName}'s Room`,
     });
@@ -50,7 +50,7 @@ export const get = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("privateRooms")
-      .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
+      .withIndex("by_owner_id", (q) => q.eq("ownerId", args.ownerId))
       .first();
   },
 });
@@ -71,7 +71,7 @@ export const updateStatus = mutation({
 
     await ctx.db.patch(room._id, {
       isActive: args.isActive,
-      lastAccessedAt: new Date().toISOString(),
+      lastAccessedAt: Date.now(),
     });
   },
 }); 

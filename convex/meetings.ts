@@ -5,7 +5,7 @@ export const create = mutation({
   args: {
     title: v.string(),
     description: v.string(),
-    startsAt: v.string(),
+    startsAt: v.number(),
     duration: v.number(),
     isRecurring: v.boolean(),
     requireRegistration: v.boolean(),
@@ -14,11 +14,13 @@ export const create = mutation({
     hostName: v.string(),
     hostImage: v.optional(v.string()),
     streamId: v.string(),
+    meetingUrl: v.string(),
   },
   handler: async (ctx, args) => {
 
     const meetingId = await ctx.db.insert("meetings", {
       streamId: args.streamId,
+      meetingUrl: args.meetingUrl,
       title: args.title,
       description: args.description,
       startsAt: args.startsAt,
@@ -29,13 +31,22 @@ export const create = mutation({
       hostId: args.hostId,
       hostName: args.hostName,
       hostImage: args.hostImage,
-      createdAt: new Date().toISOString(),
+      createdAt: Date.now(),
       status: "scheduled",
+      type: "scheduled",
+      settings: {
+        allowRecording: true,
+        allowChat: true,
+        allowScreenShare: true,
+        muteOnEntry: false,
+        waitingRoom: false,
+      },
       participants: [{
         id: args.hostId,
         name: args.hostName,
         image: args.hostImage,
-        role: "host"
+        role: "host",
+        isActive: true,
       }],
     });
 
@@ -66,7 +77,7 @@ export const update = mutation({
     id: v.id("meetings"),
     title: v.string(),
     description: v.string(),
-    startsAt: v.string(),
+    startsAt: v.number(),
     duration: v.number(),
     isRecurring: v.boolean(),
     requireRegistration: v.boolean(),
@@ -79,7 +90,11 @@ export const update = mutation({
       throw new Error("Unauthorized");
     }
 
-    const { id, ...updateData } = args;
+    const { id, startsAt, ...otherUpdateData } = args;
+    const updateData = {
+      ...otherUpdateData,
+    };
+
     await ctx.db.patch(id, updateData);
 
     return { success: true };
@@ -116,7 +131,7 @@ export const addParticipant = mutation({
     participant: v.object({
       email: v.string(),
       name: v.string(),
-      role: v.union(v.literal("viewer"), v.literal("presenter"), v.literal("co-host")),
+      role: v.union(v.literal("co-host"), v.literal("participant"), v.literal("observer")),
     }),
   },
   handler: async (ctx, args) => {
@@ -154,7 +169,8 @@ export const addParticipant = mutation({
         id: args.participant.email,
         name: args.participant.name,
         image: undefined,
-        role: args.participant.role
+        role: args.participant.role,
+        isActive: true
       }
     ];
 
@@ -242,9 +258,9 @@ export const updateParticipantRole = mutation({
     meetingId: v.id("meetings"),
     participantId: v.string(),
     role: v.union(
-      v.literal("viewer"),
-      v.literal("presenter"),
-      v.literal("co-host")
+      v.literal("co-host"),
+      v.literal("participant"),
+      v.literal("observer")
     )
   },
   handler: async (ctx, args) => {
@@ -259,19 +275,19 @@ export const updateParticipantRole = mutation({
     }
 
     if (meeting.hostId !== auth.subject) {
-      throw new Error("Only hosts can update participant roles");
+      throw new Error("Only the host can change participant roles");
     }
 
-    const participantIndex = meeting.participants.findIndex(
-      p => p.id === args.participantId
-    );
-
+    const participantIndex = meeting.participants.findIndex(p => p.id === args.participantId);
     if (participantIndex === -1) {
       throw new Error("Participant not found");
     }
 
-    const updatedParticipants = [...meeting.participants];
+    if (meeting.participants[participantIndex].role === "host") {
+      throw new Error("Cannot change the host's role");
+    }
 
+    const updatedParticipants = [...meeting.participants];
     updatedParticipants[participantIndex] = {
       ...updatedParticipants[participantIndex],
       role: args.role
@@ -282,5 +298,5 @@ export const updateParticipantRole = mutation({
     });
 
     return { success: true };
-  },
+  }
 });

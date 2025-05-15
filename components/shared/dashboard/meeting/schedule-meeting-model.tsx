@@ -107,8 +107,9 @@ const ScheduleMeetingModel = forwardRef<
 
   useEffect(() => {
     if (mode === 'edit' && defaultValues) {
-      if (defaultValues.startsAt && typeof defaultValues.startsAt === 'string') {
+      if (defaultValues.startsAt) {
         try {
+          // Handle startsAt as a number (timestamp)
           const date = new Date(defaultValues.startsAt);
           const hours = date.getHours().toString().padStart(2, '0');
           const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -132,14 +133,15 @@ const ScheduleMeetingModel = forwardRef<
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsLoading(true);
-      const startsAt = new Date(values.date);
+
+      const startsAt = new Date(values.date).getTime();
       const [hours, minutes] = values.time.split(':');
-      startsAt.setHours(parseInt(hours), parseInt(minutes));
+      const streamId = `${user?.id.replace('user_', '')}-${Date.now()}`;
 
       const meetingData = {
         title: values.title,
         description: values.description,
-        startsAt: startsAt.toISOString(),
+        startsAt: startsAt,
         duration: values.duration,
         isRecurring: values.isRecurring,
         requireRegistration: values.requireRegistration,
@@ -147,7 +149,8 @@ const ScheduleMeetingModel = forwardRef<
         hostId: user?.id || '',
         hostName: user?.fullName || '',
         hostImage: user?.imageUrl,
-        streamId: mode === 'edit' ? defaultValues?.streamId || `${user?.id}-${Date.now()}` : `${user?.id}-${Date.now()}`,
+        streamId: mode === 'edit' ? defaultValues?.streamId || streamId : streamId,
+        meetingUrl: `${process.env.NEXT_PUBLIC_APP_URL}/video/${streamId}`,
       };
 
       if (mode === 'create') {
@@ -157,14 +160,7 @@ const ScheduleMeetingModel = forwardRef<
         try {
           const updateData = {
             id: meetingId as unknown as Id<"meetings">,
-            title: meetingData.title,
-            description: meetingData.description,
-            startsAt: meetingData.startsAt,
-            duration: meetingData.duration,
-            isRecurring: meetingData.isRecurring,
-            requireRegistration: meetingData.requireRegistration,
-            maxParticipants: meetingData.maxParticipants,
-            streamId: meetingData.streamId
+            ...meetingData,
           };
 
           await updateMeeting(updateData);
